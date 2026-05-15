@@ -1,0 +1,45 @@
+
+name: Build Qt App on Windows
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: 拉取代码
+      uses: actions/checkout@v4
+
+    # 1. 安装 Qt 5.15.2（Windows 版，和你的项目兼容）
+    - name: 安装 Qt
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '5.15.2'
+        host: 'windows'
+        target: 'desktop'
+        arch: 'win64_msvc2019_64'
+        install-deps: true
+
+    # 2. 编译项目（用 MSVC 编译器，和 GitHub 自带环境完美兼容）
+    - name: 编译
+      run: |
+        cd src
+        qmake edge-tts-gui.pro
+        nmake
+
+    # 3. 打包依赖，让 EXE 能独立运行
+    - name: 打包依赖
+      run: |
+        cd src/release
+        windeployqt --no-translations --no-system-d3d-compiler --no-angle --no-opengl-sw edge-tts-gui.exe
+
+    # 4. 上传生成的 EXE
+    - name: 上传文件
+      uses: actions/upload-artifact@v4
+      with:
+        name: edge-tts-gui
+        path: src/release/edge-tts-gui.exe
