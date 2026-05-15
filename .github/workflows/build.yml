@@ -1,4 +1,4 @@
-name: Build
+name: Build Qt App
 
 on:
   push:
@@ -6,37 +6,38 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-2019
     steps:
       - uses: actions/checkout@v4
 
-      # 安装 Qt 5.15.2（用官方的安装脚本，不用第三方action）
-      - name: Install Qt
-        run: |
-          winget install QtProject.QtCreator --silent
-          winget install QtProject.Qt.5.15.2 --silent
+      - name: Set up MSVC
+        uses: microsoft/setup-msbuild@v2
+        with:
+          vs-version: '16.11'
 
-      # 把 Qt 工具链加到环境变量
-      - name: Set PATH
-        run: |
-          echo "C:\Qt\5.15.2\msvc2019_64\bin" | Out-File -FilePath $env:GITHUB_PATH -Append
+      - name: Install Qt 5.15.2 (MSVC 2019)
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '5.15.2'
+          host: 'windows'
+          target: 'desktop'
+          arch: 'win64_msvc2019_64'
+          install-deps: true
+          setup-python: false
 
-      # 编译项目
       - name: Build
         run: |
           cd src
           qmake edge-tts-gui.pro
           nmake release
 
-      # 打包依赖
       - name: Deploy
         run: |
           cd src/release
-          windeployqt --no-translations edge-tts-gui.exe
+          windeployqt --no-translations --no-system-d3d-compiler --no-angle --no-opengl-sw edge-tts-gui.exe
 
-      # 上传文件
-      - name: Upload
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: edge-tts-gui
-          path: src/release/edge-tts-gui.exe
+          path: src/release/
