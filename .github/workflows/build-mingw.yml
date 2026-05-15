@@ -1,0 +1,45 @@
+name: Build with MinGW
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: 拉取代码
+      uses: actions/checkout@v4
+
+    - name: 安装 MinGW
+      uses: egor-tensin/setup-mingw@v4
+      with:
+        platform: x64
+
+    - name: 安装 Qt 5.15.2 (MinGW 版)
+      uses: jurplel/install-qt-action@v3
+      with:
+        version: '5.15.2'
+        host: 'windows'
+        target: 'desktop'
+        arch: 'win64_mingw81'
+        install-deps: true
+
+    - name: 编译项目
+      run: |
+        cd src
+        qmake edge-tts-gui.pro
+        mingw32-make -j4
+
+    - name: 打包依赖库
+      run: |
+        cd src/release
+        windeployqt --no-translations --no-system-d3d-compiler --no-angle --no-opengl-sw edge-tts-gui.exe
+
+    - name: 上传 EXE
+      uses: actions/upload-artifact@v4
+      with:
+        name: edge-tts-gui
+        path: src/release/edge-tts-gui.exe
