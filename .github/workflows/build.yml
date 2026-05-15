@@ -1,0 +1,22 @@
+name: C++编译成EXE
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 配置MSVC编译器环境
+        uses: microsoft/setup-msbuild@v2
+
+      - name: 编译三个文件为单个EXE
+        run: cl /EHsc main.cpp dialog.cpp communicate.cpp /Fe:app.exe
+
+      - name: 上传生成的EXE
+        uses: actions/upload-artifact@v4
+        with:
+          name: 编译好的程序
+          path: app.exe
