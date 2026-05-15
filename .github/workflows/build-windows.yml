@@ -1,26 +1,17 @@
-name: Build C++ to EXE
-
-on:
-  push:
-    branches: [ main ]
-
+name: 编译C++为EXE
+on: push
 jobs:
   build:
     runs-on: windows-latest
     steps:
-    - name: 拉取代码
-      uses: actions/checkout@v4
+      - name: 拉取代码
+        uses: actions/checkout@v4
 
-    - name: 初始化 MSVC 编译环境
-      uses: ilkebulbali/msvc-action@latest
+      - name: 编译成EXE
+        run: g++ communicate.cpp -o communicate.exe
 
-    - name: 编译 C++ 生成 EXE
-      run: |
-        cl main.cpp communicate.cpp dialog.cpp /Fe:app.exe
-
-    - name: 上传 EXE 供下载
-      uses: actions/upload-artifact@v4
-      with:
-        name: C++-Windows-EXE
-        path: app.exe
-
+      - name: 上传EXE文件
+        uses: actions/upload-artifact@v4
+        with:
+          name: communicate程序
+          path: communicate.exe
